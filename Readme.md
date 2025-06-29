@@ -4,7 +4,6 @@
 
 1. Install [Go](https://go.dev/dl/).
 2. Copy `.env.example` to `.env` and set the required values.
-3. Ensure you have the public Apple certificate set in `.env`.
 
 ## Running the Server
 
@@ -28,4 +27,4 @@ make generate
 
 ## API
 
-**POST** `/v1/apple-notifications`
+**POST** `/v1/notifications`

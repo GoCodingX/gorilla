@@ -5,17 +5,14 @@ import (
 )
 
 type Config struct {
-	Port                 string
-	AppleSigningKey      string
-	FeatureFlagAPIURL    string
-	AppleRootCertificate string
+	Port              string
+	FeatureFlagAPIURL string
 }
 
 func Load() (*Config, error) {
 	return &Config{
-		Port:                 getEnvOrDefault("PORT", ":8080"),
-		FeatureFlagAPIURL:    os.Getenv("FEATURE_FLAG_API_URL"),
-		AppleRootCertificate: os.Getenv("APPLE_ROOT_CERTIFICATE"),
+		Port:              getEnvOrDefault("PORT", ":8080"),
+		FeatureFlagAPIURL: os.Getenv("FEATURE_FLAG_API_URL"),
 	}, nil
 }
 
