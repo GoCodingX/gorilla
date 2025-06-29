@@ -1,14 +1,13 @@
 package main
 
 import (
-	"errors"
-	"io/fs"
 	"log/slog"
 	"net/http"
 
 	"github.com/GoCodingX/gorilla/internal/config"
 	"github.com/GoCodingX/gorilla/internal/handlers"
 	"github.com/GoCodingX/gorilla/internal/logger"
+	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
 )
 
@@ -16,16 +15,13 @@ func main() {
 	// load env vars from .env files
 	err := godotenv.Load()
 	if err != nil {
-		var pathError *fs.PathError
-		if !errors.As(err, &pathError) {
-			logger.ErrorAndExit("failed to read env file", err)
+		logger.ErrorAndExit("failed to read env file", err)
 
-			return
-		}
+		return
 	}
 
 	// load config
-	cfg, err := config.Load()
+	cfg, err := env.ParseAs[config.Config]()
 	if err != nil {
 		logger.ErrorAndExit("failed to load config", err)
 
@@ -33,7 +29,7 @@ func main() {
 	}
 
 	// initialize router
-	srv := handlers.NewRouter(cfg)
+	srv := handlers.NewRouter(&cfg)
 
 	logger.Info("starting the server", slog.String("port", cfg.Port))
 

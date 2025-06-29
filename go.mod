@@ -3,7 +3,7 @@ module github.com/GoCodingX/gorilla
 go 1.23.5
 
 require (
-	github.com/brianvoe/gofakeit/v7 v7.2.1
+	github.com/caarlos0/env/v11 v11.3.1
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.9.0
