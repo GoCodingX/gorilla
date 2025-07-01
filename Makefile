@@ -23,7 +23,7 @@ generate:
 .PHONY: generate
 
 dev:
-	@go run cmd/payments-api/main.go
+	@go run cmd/quotes-api/main.go
 .PHONY: dev
 
 test:

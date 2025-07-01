@@ -27,7 +27,7 @@ func TestHandleNotification_Failure(t *testing.T) {
 		UserId: "a_user_id",
 	}).Return(errors.New("some terrible error happened"))
 
-	service := handlers.NewPaymentsService(&handlers.NewPaymentsServiceParams{
+	service := handlers.NewQuotesService(&handlers.NewQuotesServiceParams{
 		FeatureFlagClient: mockFeatureFlagClient,
 	})
 
@@ -41,7 +41,7 @@ func TestHandleNotification_Failure(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	// act
-	service.HandleNotification(rec, req)
+	service.GetQuotes(rec, req)
 
 	// assert
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
@@ -60,7 +60,7 @@ func TestHandleNotification_Success(t *testing.T) {
 		UserId: "a_user_id",
 	}).Return(nil)
 
-	service := handlers.NewPaymentsService(&handlers.NewPaymentsServiceParams{
+	service := handlers.NewQuotesService(&handlers.NewQuotesServiceParams{
 		FeatureFlagClient: mockFeatureFlagClient,
 	})
 
@@ -74,7 +74,7 @@ func TestHandleNotification_Success(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	// act
-	service.HandleNotification(rec, req)
+	service.GetQuotes(rec, req)
 
 	// assert
 	assert.Equal(t, http.StatusOK, rec.Code)

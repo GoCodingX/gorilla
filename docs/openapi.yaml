@@ -1,0 +1,93 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Quote API server
+paths:
+  /quotes:
+    post:
+      requestBody:
+        description: Create a quote
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuoteRequest'
+        required: true
+      responses:
+        '200':
+          description: pet response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    Quote:
+      type: object
+      required:
+        - text
+        - author_id
+      properties:
+        text:
+          type: string
+          minLength: 1
+          example: hard work pays off
+        author_id:
+          type: string
+          format: uuid
+          example: 4357ac30-5cb3-48d3-8f97-456187004d8b
+    CreateQuoteRequest:
+      allOf:
+        - $ref: '#/components/schemas/Quote'
+        - type: object
+          required:
+            - creator_id
+          properties:
+            creator_id:
+              type: string
+              format: uuid
+              example: 4357ac30-5cb3-48d3-8f97-456187004d8b
+    Detail:
+      type: object
+      properties:
+        field:
+          type: string
+          description: The specific field related to the error.
+          example: email
+        message:
+          type: string
+          description: Human-readable explanation of the field error.
+          example: Email must be a valid address.
+      required:
+        - field
+        - message
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int
+          description: HTTP status code.
+          example: 400
+        message:
+          type: string
+          description: Human-readable summary of the error.
+          example: Validation failed.
+        status:
+          type: string
+          description: Status code for categorization, e.g., 'INVALID_ARGUMENT'.
+          example: INVALID_ARGUMENT
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Detail'
+          description: List of detailed error objects for granular issues.
+      required:
+        - code
+        - message
+        - status

@@ -1,30 +1,40 @@
 package handlers
 
 import (
+	"fmt"
+
+	"github.com/GoCodingX/gorilla/internal/api"
 	"github.com/GoCodingX/gorilla/internal/clients/featureflag"
 	"github.com/GoCodingX/gorilla/internal/config"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
-func NewRouter(cfg *config.Config) *chi.Mux {
-	r := chi.NewRouter()
+func NewRouter(cfg *config.Config) (*echo.Echo, error) {
+	e := echo.New()
+
+	swagger, err := api.GetSwagger()
+	if err != nil {
+		return nil, fmt.Errorf("error loading swagger spec: %w", err)
+	}
 
 	// middlewares
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.AllowContentType("application/json"))
+	e.Use(middleware.RequestID())
+	e.Use(oApiValidatorMiddleware(swagger))
+	e.Use(timeoutMiddleware)
+	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
 
 	// initialize dependencies
 	featureFlagClient := featureflag.NewClient(cfg.FeatureFlagAPIURL)
 
 	// initialize service
-	service := NewPaymentsService(&NewPaymentsServiceParams{
+	service := NewQuotesService(&NewQuotesServiceParams{
 		FeatureFlagClient: featureFlagClient,
 	})
 
-	// routes
-	r.Post("/v1/notifications", service.HandleNotification)
+	// register routes
+	api.RegisterHandlers(e, service)
 
-	return r
+	return e, nil
 }

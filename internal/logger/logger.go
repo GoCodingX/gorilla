@@ -19,7 +19,7 @@ func Error(msg string, args ...any) {
 	logger.Error(msg, args...)
 }
 
-func ErrorAndExit(message string, err error) {
+func Fatal(message string, err error) {
 	logger.Error(message, slog.String("error", err.Error()))
 	os.Exit(1)
 }
