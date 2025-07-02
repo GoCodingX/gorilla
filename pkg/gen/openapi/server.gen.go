@@ -21,8 +21,17 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// BaseQuote defines model for BaseQuote.
+type BaseQuote struct {
+	AuthorId openapi_types.UUID `json:"author_id"`
+	Text     string             `json:"text"`
+}
+
 // CreateQuoteRequest defines model for CreateQuoteRequest.
-type CreateQuoteRequest struct {
+type CreateQuoteRequest = BaseQuote
+
+// CreateQuoteResponse defines model for CreateQuoteResponse.
+type CreateQuoteResponse struct {
 	AuthorId  openapi_types.UUID `json:"author_id"`
 	CreatorId openapi_types.UUID `json:"creator_id"`
 	Text      string             `json:"text"`
@@ -50,12 +59,6 @@ type ErrorResponse struct {
 
 	// Status Status code for categorization, e.g., 'INVALID_ARGUMENT'.
 	Status string `json:"status"`
-}
-
-// Quote defines model for Quote.
-type Quote struct {
-	AuthorId openapi_types.UUID `json:"author_id"`
-	Text     string             `json:"text"`
 }
 
 // PostQuotesJSONRequestBody defines body for PostQuotes for application/json ContentType.
@@ -122,7 +125,7 @@ type PostQuotesResponseObject interface {
 	VisitPostQuotesResponse(w http.ResponseWriter) error
 }
 
-type PostQuotes200JSONResponse Quote
+type PostQuotes200JSONResponse CreateQuoteResponse
 
 func (response PostQuotes200JSONResponse) VisitPostQuotesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -191,18 +194,19 @@ func (sh *strictHandler) PostQuotes(ctx echo.Context) error {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"AP//mNnFLwwIAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

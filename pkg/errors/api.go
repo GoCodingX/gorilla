@@ -1,4 +1,4 @@
-package handlers
+package errors
 
 import (
 	"errors"
@@ -10,10 +10,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// convertEchoToApiError extracts and converts the payload inside an echo.HTTPError
+// ConvertEchoToApiError extracts and converts the payload inside an echo.HTTPError
 // into a generated.ErrorResponse for consistent structured error handling across the API.
 // Returns an error if the payload is not of type generated.ErrorResponse.
-func convertEchoToApiError(err *echo.HTTPError) (*openapi.ErrorResponse, error) {
+func ConvertEchoToApiError(err *echo.HTTPError) (*openapi.ErrorResponse, error) {
 	errorResponse, ok := err.Message.(openapi.ErrorResponse)
 	if ok {
 		return &errorResponse, nil
@@ -35,14 +35,14 @@ func convertEchoToApiError(err *echo.HTTPError) (*openapi.ErrorResponse, error) 
 	}, nil
 }
 
-// oApiErrorHandler returns an Echo HTTP error handler that converts
+// OApiErrorHandler returns an Echo HTTP error handler that converts
 // *echo.HTTPError instances produced by request validation failures into
 // structured API error responses.
 // Additionally, this ensures validation errors are returned consistently in generated.ErrorResponse
 // format, allowing clients to receive detailed field-level validation feedback.
-func oApiErrorHandler() func(c echo.Context, err *echo.HTTPError) error {
+func OApiErrorHandler() func(c echo.Context, err *echo.HTTPError) error {
 	return func(c echo.Context, err *echo.HTTPError) error {
-		responsePayload, conversionErr := convertEchoToApiError(err)
+		responsePayload, conversionErr := ConvertEchoToApiError(err)
 		if conversionErr != nil {
 			return fmt.Errorf("failed to conver to api error: %w", conversionErr)
 		}
@@ -55,11 +55,11 @@ func oApiErrorHandler() func(c echo.Context, err *echo.HTTPError) error {
 	}
 }
 
-// multiErrorHandler returns a callback that converts an openapi3.MultiError
+// MultiErrorHandler returns a callback that converts an openapi3.MultiError
 // into a structured *echo.HTTPError with a generated.ErrorResponse payload.
 // It extracts validation error details from the MultiError and formats them
 // into a consistent API error response with HTTP 400 Bad Request.
-func multiErrorHandler() func(multiError openapi3.MultiError) *echo.HTTPError {
+func MultiErrorHandler() func(multiError openapi3.MultiError) *echo.HTTPError {
 	return func(multiError openapi3.MultiError) *echo.HTTPError {
 		status := http.StatusBadRequest
 
@@ -74,22 +74,24 @@ func multiErrorHandler() func(multiError openapi3.MultiError) *echo.HTTPError {
 		for _, me := range multiError {
 			var schemaErr *openapi3.SchemaError
 
-			if errors.As(me, &schemaErr) {
-				var schemaMultiErr openapi3.MultiError
-				if errors.As(schemaErr.Origin, &schemaMultiErr) {
-					for _, sme := range schemaMultiErr {
-						if errors.As(sme, &schemaErr) {
-							field := ""
+			if !errors.As(me, &schemaErr) {
+				continue
+			}
 
-							if fields := schemaErr.JSONPointer(); len(fields) > 0 {
-								field = fields[0]
-							}
+			var schemaMultiErr openapi3.MultiError
+			if errors.As(schemaErr.Origin, &schemaMultiErr) {
+				for _, sme := range schemaMultiErr {
+					if errors.As(sme, &schemaErr) {
+						field := ""
 
-							details = append(details, openapi.Detail{
-								Field:   field,
-								Message: schemaErr.Reason,
-							})
+						if fields := schemaErr.JSONPointer(); len(fields) > 0 {
+							field = fields[0]
 						}
+
+						details = append(details, openapi.Detail{
+							Field:   field,
+							Message: schemaErr.Reason,
+						})
 					}
 				}
 			}

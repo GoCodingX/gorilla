@@ -6,6 +6,7 @@ import (
 	"github.com/GoCodingX/gorilla/internal/config"
 	"github.com/GoCodingX/gorilla/internal/repository/pg"
 	"github.com/GoCodingX/gorilla/pkg/gen/openapi"
+	middleware2 "github.com/GoCodingX/gorilla/pkg/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -20,8 +21,8 @@ func NewRouter(cfg *config.Config, repo *pg.Repository) (*echo.Echo, error) {
 
 	// middlewares
 	e.Use(middleware.RequestID())
-	e.Use(oApiValidatorMiddleware(swagger))
-	e.Use(timeoutMiddleware)
+	e.Use(middleware2.OApiValidatorMiddleware(swagger))
+	e.Use(middleware2.TimeoutMiddleware)
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 
