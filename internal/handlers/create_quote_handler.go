@@ -3,18 +3,18 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/GoCodingX/gorilla/internal/api"
+	"github.com/GoCodingX/gorilla/pkg/gen/openapi"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 func (s *QuotesService) PostQuotes(c echo.Context) error {
-	payload := new(api.CreateQuoteRequest)
+	payload := new(openapi.CreateQuoteRequest)
 	if err := c.Bind(payload); err != nil {
 		return err
 	}
 
-	response := api.PostQuotes200JSONResponse{
+	response := openapi.PostQuotes200JSONResponse{
 		AuthorId: uuid.New(),
 		Text:     "some text here",
 	}

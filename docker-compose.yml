@@ -1,0 +1,14 @@
+version: "3"
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    shm_size: 128mb # todo: check
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: user
+      POSTGRES_DB: quotes
+    ports:
+      - "5432:5432"
+    volumes:
+      - .pgdata:/var/lib/postgresql/data

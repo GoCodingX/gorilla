@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	clients "github.com/GoCodingX/gorilla/internal/repository"
+	repository "github.com/GoCodingX/gorilla/internal/repository"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -42,7 +42,7 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // CreateQuote mocks base method.
-func (m *MockRepository) CreateQuote(ctx context.Context, quote *clients.Quote) error {
+func (m *MockRepository) CreateQuote(ctx context.Context, quote *repository.Quote) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateQuote", ctx, quote)
 	ret0, _ := ret[0].(error)

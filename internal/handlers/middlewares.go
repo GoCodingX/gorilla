@@ -10,11 +10,15 @@ import (
 	oapimiddleware "github.com/oapi-codegen/echo-middleware"
 )
 
-// todo: add description here
+const timeoutInSeconds = 10
+
 // todo: make the timeout return json
+
+// timeoutMiddleware sets a request timeout middleware with a custom
+// "request timed out" message and a configurable timeout duration.
 var timeoutMiddleware = middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 	ErrorMessage: "request timed out",
-	Timeout:      10 * time.Second,
+	Timeout:      timeoutInSeconds * time.Second,
 })
 
 // oApiValidatorMiddleware creates an Echo middleware that validates requests

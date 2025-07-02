@@ -1,6 +1,7 @@
 package config
 
 type Config struct {
-	Port              string `env:"PORT"                          envDefault:"8080"`
-	FeatureFlagAPIURL string `env:"FEATURE_FLAG_API_URL,required"`
+	Port          string `env:"PORT"                    envDefault:"8080"`
+	DatabaseUrl   string `env:"DATABASE_URL,required"`
+	MigrationsDir string `env:"MIGRATIONS_DIR,required"`
 }

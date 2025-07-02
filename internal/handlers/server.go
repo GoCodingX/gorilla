@@ -1,17 +1,20 @@
 package handlers
 
-import "github.com/GoCodingX/gorilla/internal/clients"
+import (
+	"github.com/GoCodingX/gorilla/internal/repository"
+	"github.com/GoCodingX/gorilla/internal/repository/pg"
+)
 
 type QuotesService struct {
-	featureFlagClient clients.FeatureFlagClient
+	repo repository.Repository
 }
 
 type NewQuotesServiceParams struct {
-	FeatureFlagClient clients.FeatureFlagClient
+	Repo *pg.Repository
 }
 
 func NewQuotesService(params *NewQuotesServiceParams) *QuotesService {
 	return &QuotesService{
-		featureFlagClient: params.FeatureFlagClient,
+		repo: params.Repo,
 	}
 }

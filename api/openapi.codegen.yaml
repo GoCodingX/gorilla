@@ -1,4 +1,4 @@
-package: api
+package: openapi
 generate:
   echo-server: true
   strict-server: true

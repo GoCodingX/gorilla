@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/GoCodingX/gorilla/internal/api"
+	"github.com/GoCodingX/gorilla/pkg/gen/openapi"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 )
@@ -13,8 +13,8 @@ import (
 // convertEchoToApiError extracts and converts the payload inside an echo.HTTPError
 // into a generated.ErrorResponse for consistent structured error handling across the API.
 // Returns an error if the payload is not of type generated.ErrorResponse.
-func convertEchoToApiError(err *echo.HTTPError) (*api.ErrorResponse, error) {
-	errorResponse, ok := err.Message.(api.ErrorResponse)
+func convertEchoToApiError(err *echo.HTTPError) (*openapi.ErrorResponse, error) {
+	errorResponse, ok := err.Message.(openapi.ErrorResponse)
 	if ok {
 		return &errorResponse, nil
 	}
@@ -28,7 +28,7 @@ func convertEchoToApiError(err *echo.HTTPError) (*api.ErrorResponse, error) {
 		)
 	}
 
-	return &api.ErrorResponse{
+	return &openapi.ErrorResponse{
 		Code:    err.Code,
 		Status:  http.StatusText(err.Code),
 		Message: msg,
@@ -63,13 +63,13 @@ func multiErrorHandler() func(multiError openapi3.MultiError) *echo.HTTPError {
 	return func(multiError openapi3.MultiError) *echo.HTTPError {
 		status := http.StatusBadRequest
 
-		response := api.ErrorResponse{
+		response := openapi.ErrorResponse{
 			Code:    status,
 			Message: "request validation failed",
 			Status:  http.StatusText(status),
 		}
 
-		var details []api.Detail
+		var details []openapi.Detail
 
 		for _, me := range multiError {
 			var schemaErr *openapi3.SchemaError
@@ -85,7 +85,7 @@ func multiErrorHandler() func(multiError openapi3.MultiError) *echo.HTTPError {
 								field = fields[0]
 							}
 
-							details = append(details, api.Detail{
+							details = append(details, openapi.Detail{
 								Field:   field,
 								Message: schemaErr.Reason,
 							})
