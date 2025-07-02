@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/GoCodingX/gorilla/pkg/gen/openapi"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -82,14 +83,8 @@ func MultiErrorHandler() func(multiError openapi3.MultiError) *echo.HTTPError {
 			if errors.As(schemaErr.Origin, &schemaMultiErr) {
 				for _, sme := range schemaMultiErr {
 					if errors.As(sme, &schemaErr) {
-						field := ""
-
-						if fields := schemaErr.JSONPointer(); len(fields) > 0 {
-							field = fields[0]
-						}
-
 						details = append(details, openapi.Detail{
-							Field:   field,
+							Field:   strings.Join(schemaErr.JSONPointer(), "."),
 							Message: schemaErr.Reason,
 						})
 					}
