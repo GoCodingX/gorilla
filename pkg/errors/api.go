@@ -14,9 +14,9 @@ import (
 // into a generated.ErrorResponse for consistent structured error handling across the API.
 // Returns an error if the payload is not of type generated.ErrorResponse.
 func ConvertEchoToApiError(err *echo.HTTPError) (*openapi.ErrorResponse, error) {
-	errorResponse, ok := err.Message.(openapi.ErrorResponse)
+	errorResponse, ok := err.Message.(*openapi.ErrorResponse)
 	if ok {
-		return &errorResponse, nil
+		return errorResponse, nil
 	}
 
 	msg, ok := err.Message.(string)
@@ -63,7 +63,7 @@ func MultiErrorHandler() func(multiError openapi3.MultiError) *echo.HTTPError {
 	return func(multiError openapi3.MultiError) *echo.HTTPError {
 		status := http.StatusBadRequest
 
-		response := openapi.ErrorResponse{
+		response := &openapi.ErrorResponse{
 			Code:    status,
 			Message: "request validation failed",
 			Status:  http.StatusText(status),

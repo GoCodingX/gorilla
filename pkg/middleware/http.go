@@ -1,9 +1,14 @@
 package middleware
 
 import (
+	"errors"
+	"log/slog"
+	"net/http"
 	"time"
 
-	"github.com/GoCodingX/gorilla/pkg/errors"
+	pkgerrors "github.com/GoCodingX/gorilla/pkg/errors"
+	"github.com/GoCodingX/gorilla/pkg/gen/openapi"
+	"github.com/GoCodingX/gorilla/pkg/logger"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
@@ -26,10 +31,52 @@ var TimeoutMiddleware = middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 // against the provided OpenAPI spec and returns structured errors on validation failure.
 func OApiValidatorMiddleware(swagger *openapi3.T) echo.MiddlewareFunc {
 	return oapimiddleware.OapiRequestValidatorWithOptions(swagger, &oapimiddleware.Options{
-		ErrorHandler:      errors.OApiErrorHandler(),
-		MultiErrorHandler: errors.MultiErrorHandler(),
+		ErrorHandler:      pkgerrors.OApiErrorHandler(),
+		MultiErrorHandler: pkgerrors.MultiErrorHandler(),
 		Options: openapi3filter.Options{
 			MultiError: true,
 		},
 	})
+}
+
+// CustomHTTPErrorHandler formats and sends consistent JSON error responses
+// in openapi.ErrorResponse format for all errors returned by Echo handlers.
+func CustomHTTPErrorHandler(err error, c echo.Context) {
+	if c.Response().Committed {
+		return
+	}
+
+	var (
+		statusCode   int
+		responseBody *openapi.ErrorResponse
+	)
+
+	var echoErr *echo.HTTPError
+	if errors.As(err, &echoErr) {
+		errorResponse, ok := echoErr.Message.(*openapi.ErrorResponse)
+		if ok {
+			statusCode = errorResponse.Code
+			responseBody = errorResponse
+		} else {
+			statusCode = echoErr.Code
+			msg, _ := echoErr.Message.(string)
+
+			responseBody = &openapi.ErrorResponse{
+				Code:    statusCode,
+				Message: msg,
+				Status:  http.StatusText(statusCode),
+			}
+		}
+	} else {
+		statusCode = http.StatusInternalServerError
+		responseBody = &openapi.ErrorResponse{
+			Code:    statusCode,
+			Message: "something unexpected happened",
+			Status:  http.StatusText(statusCode),
+		}
+	}
+
+	if err := c.JSON(statusCode, responseBody); err != nil {
+		logger.Error("failed to send error response", slog.String("err", err.Error()))
+	}
 }

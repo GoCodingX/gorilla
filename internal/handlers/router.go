@@ -7,6 +7,7 @@ import (
 	"github.com/GoCodingX/gorilla/internal/repository/pg"
 	"github.com/GoCodingX/gorilla/pkg/gen/openapi"
 	middleware2 "github.com/GoCodingX/gorilla/pkg/middleware"
+	pkgmiddleware "github.com/GoCodingX/gorilla/pkg/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -25,6 +26,7 @@ func NewRouter(cfg *config.Config, repo *pg.Repository) (*echo.Echo, error) {
 	e.Use(middleware2.TimeoutMiddleware)
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
+	e.HTTPErrorHandler = pkgmiddleware.CustomHTTPErrorHandler
 
 	// initialize service
 	service := NewQuotesService(&NewQuotesServiceParams{
