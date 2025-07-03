@@ -60,20 +60,11 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 		} else {
 			statusCode = echoErr.Code
 			msg, _ := echoErr.Message.(string)
-
-			responseBody = &openapi.ErrorResponse{
-				Code:    statusCode,
-				Message: msg,
-				Status:  http.StatusText(statusCode),
-			}
+			responseBody = pkgerrors.NewErrorResponse(statusCode, msg, nil)
 		}
 	} else {
 		statusCode = http.StatusInternalServerError
-		responseBody = &openapi.ErrorResponse{
-			Code:    statusCode,
-			Message: "something unexpected happened",
-			Status:  http.StatusText(statusCode),
-		}
+		responseBody = pkgerrors.NewErrorResponse(statusCode, "something unexpected happened", nil)
 	}
 
 	if err := c.JSON(statusCode, responseBody); err != nil {

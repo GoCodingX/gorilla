@@ -5,21 +5,26 @@ import (
 	"os"
 )
 
-var logger *slog.Logger
+func Init() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo, // todo:dev should be debug, the rest info.
+	}))
 
-func init() { //nolint:gochecknoinits
-	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	// set as the default logger globally
+	slog.SetDefault(logger)
+
+	logger.Info("logger initialized")
 }
 
 func Info(msg string, args ...any) {
-	logger.Info(msg, args...)
+	slog.Info(msg, args...)
 }
 
 func Error(msg string, args ...any) {
-	logger.Error(msg, args...)
+	slog.Error(msg, args...)
 }
 
 func Fatal(message string, err error) {
-	logger.Error(message, slog.String("error", err.Error()))
+	slog.Error(message, slog.String("error", err.Error()))
 	os.Exit(1)
 }

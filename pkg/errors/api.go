@@ -29,11 +29,7 @@ func ConvertEchoToApiError(err *echo.HTTPError) (*openapi.ErrorResponse, error) 
 		)
 	}
 
-	return &openapi.ErrorResponse{
-		Code:    err.Code,
-		Status:  http.StatusText(err.Code),
-		Message: msg,
-	}, nil
+	return NewErrorResponse(err.Code, msg, nil), nil
 }
 
 // OApiErrorHandler returns an Echo HTTP error handler that converts
@@ -64,36 +60,37 @@ func MultiErrorHandler() func(multiError openapi3.MultiError) *echo.HTTPError {
 	return func(multiError openapi3.MultiError) *echo.HTTPError {
 		status := http.StatusBadRequest
 
-		response := &openapi.ErrorResponse{
-			Code:    status,
-			Message: "request validation failed",
-			Status:  http.StatusText(status),
-		}
+		response := NewErrorResponse(status, "request validation failed", nil)
 
 		var details []openapi.Detail
 
 		for _, me := range multiError {
 			var schemaErr *openapi3.SchemaError
-
-			if !errors.As(me, &schemaErr) {
-				continue
-			}
-
-			var schemaMultiErr openapi3.MultiError
-			if errors.As(schemaErr.Origin, &schemaMultiErr) {
-				for _, sme := range schemaMultiErr {
-					if errors.As(sme, &schemaErr) {
-						details = append(details, openapi.Detail{
-							Field:   strings.Join(schemaErr.JSONPointer(), "."),
-							Message: schemaErr.Reason,
-						})
-					}
-				}
+			if errors.As(me, &schemaErr) {
+				details = append(details, openapi.Detail{
+					Field:   strings.Join(schemaErr.JSONPointer(), "."),
+					Message: schemaErr.Reason,
+				})
 			}
 		}
 
 		response.Details = &details
 
 		return echo.NewHTTPError(response.Code, response)
+	}
+}
+
+func NewEchoErrorResponse(statusCode int, message string, details *[]openapi.Detail) *echo.HTTPError {
+	errorResponsePayload := NewErrorResponse(statusCode, message, details)
+
+	return echo.NewHTTPError(errorResponsePayload.Code, errorResponsePayload)
+}
+
+func NewErrorResponse(statusCode int, message string, details *[]openapi.Detail) *openapi.ErrorResponse {
+	return &openapi.ErrorResponse{
+		Code:    statusCode,
+		Details: details,
+		Message: message,
+		Status:  http.StatusText(statusCode),
 	}
 }

@@ -41,6 +41,20 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// CreateAuthor mocks base method.
+func (m *MockRepository) CreateAuthor(ctx context.Context, author *repository.Author) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAuthor", ctx, author)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateAuthor indicates an expected call of CreateAuthor.
+func (mr *MockRepositoryMockRecorder) CreateAuthor(ctx, author any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuthor", reflect.TypeOf((*MockRepository)(nil).CreateAuthor), ctx, author)
+}
+
 // CreateQuote mocks base method.
 func (m *MockRepository) CreateQuote(ctx context.Context, quote *repository.Quote) error {
 	m.ctrl.T.Helper()

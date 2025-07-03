@@ -8,6 +8,7 @@ import (
 	"github.com/GoCodingX/gorilla/internal/config"
 	"github.com/GoCodingX/gorilla/internal/handlers"
 	"github.com/GoCodingX/gorilla/internal/repository/pg"
+	"github.com/GoCodingX/gorilla/pkg/gen/openapi"
 	"github.com/GoCodingX/gorilla/pkg/logger"
 	"github.com/GoCodingX/gorilla/pkg/migrate"
 	"github.com/caarlos0/env/v11"
@@ -18,6 +19,9 @@ import (
 )
 
 func main() {
+	// setup logger
+	logger.Init()
+
 	// load env vars from .env files
 	err := godotenv.Load()
 	if err != nil {
@@ -41,10 +45,20 @@ func main() {
 		return
 	}
 
-	logger.Info("successfully initialized repository")
+	swagger, err := openapi.GetSwagger()
+	if err != nil {
+		logger.Fatal("error loading swagger spec", err)
+
+		return
+	}
+
+	// initialize service
+	service := handlers.NewQuotesService(&handlers.NewQuotesServiceParams{
+		Repo: repo,
+	})
 
 	// initialize router
-	srv, err := handlers.NewRouter(&cfg, repo)
+	srv, err := handlers.NewRouter(service, swagger)
 	if err != nil {
 		logger.Fatal("failed to initialize router", err)
 
@@ -52,7 +66,7 @@ func main() {
 	}
 
 	// start the http server
-	logger.Info("starting the server", slog.String("port", cfg.Port))
+	logger.Info("starting server", slog.String("port", cfg.Port))
 
 	if err := srv.Start(fmt.Sprintf(":%s", cfg.Port)); err != nil {
 		logger.Fatal("failed to start http server", err)

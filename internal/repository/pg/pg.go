@@ -5,11 +5,11 @@ import (
 )
 
 type Repository struct {
-	client *bun.DB
+	db *bun.DB
 }
 
-func NewRepository(client *bun.DB) *Repository {
+func NewRepository(dbClient *bun.DB) *Repository {
 	return &Repository{
-		client: client,
+		db: dbClient,
 	}
 }
