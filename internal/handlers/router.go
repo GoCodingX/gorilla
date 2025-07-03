@@ -1,37 +1,29 @@
 package handlers
 
 import (
-	"fmt"
-
-	"github.com/GoCodingX/gorilla/internal/config"
-	"github.com/GoCodingX/gorilla/internal/repository/pg"
 	"github.com/GoCodingX/gorilla/pkg/gen/openapi"
 	middleware2 "github.com/GoCodingX/gorilla/pkg/middleware"
 	pkgmiddleware "github.com/GoCodingX/gorilla/pkg/middleware"
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func NewRouter(cfg *config.Config, repo *pg.Repository) (*echo.Echo, error) {
+func NewRouter(service *QuotesService, swagger *openapi3.T) (*echo.Echo, error) {
 	e := echo.New()
 
-	swagger, err := openapi.GetSwagger()
-	if err != nil {
-		return nil, fmt.Errorf("error loading swagger spec: %w", err)
-	}
+	// Hide the default console output from echo
+	e.HideBanner = true
+	e.HidePort = true
 
 	// middlewares
 	e.Use(middleware.RequestID())
+	e.Use(basicAuthMiddleware)
 	e.Use(middleware2.OApiValidatorMiddleware(swagger))
 	e.Use(middleware2.TimeoutMiddleware)
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 	e.HTTPErrorHandler = pkgmiddleware.CustomHTTPErrorHandler
-
-	// initialize service
-	service := NewQuotesService(&NewQuotesServiceParams{
-		Repo: repo,
-	})
 
 	// register routes
 	openapi.RegisterHandlers(e, service)
