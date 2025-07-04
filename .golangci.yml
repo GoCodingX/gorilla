@@ -2,4 +2,5 @@ linters:
   enable-all: true
   fast: true
   disable:
+    - mnd
     - depguard

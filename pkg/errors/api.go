@@ -1,9 +1,9 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/GoCodingX/gorilla/pkg/gen/openapi"
@@ -52,38 +52,58 @@ func OApiErrorHandler() func(c echo.Context, err *echo.HTTPError) error {
 	}
 }
 
-// MultiErrorHandler returns a callback that converts an openapi3.MultiError
-// into a structured *echo.HTTPError with a generated.ErrorResponse payload.
-// It extracts validation error details from the MultiError and formats them
-// into a consistent API error response with HTTP 400 Bad Request.
+// openapi3.MultiError into a structured Echo HTTP 400 error.
 func MultiErrorHandler() func(multiError openapi3.MultiError) *echo.HTTPError {
 	return func(multiError openapi3.MultiError) *echo.HTTPError {
-		status := http.StatusBadRequest
-
-		response := NewErrorResponse(status, "request validation failed", nil)
-
-		var details []openapi.Detail
-
-		for _, me := range multiError {
-			var schemaErr *openapi3.SchemaError
-			if errors.As(me, &schemaErr) {
-				details = append(details, openapi.Detail{
-					Field:   strings.Join(schemaErr.JSONPointer(), "."),
-					Message: schemaErr.Reason,
-				})
-			}
-		}
-
-		response.Details = &details
-
-		return echo.NewHTTPError(response.Code, response)
+		return NewEchoBadRequestResponse(ParseSchemaErrors(multiError.Error()))
 	}
+}
+
+// ParseSchemaErrors validation errors from a string into a slice of openapi.Detail.
+func ParseSchemaErrors(input string) *[]openapi.Detail {
+	var results []openapi.Detail
+
+	// regex for query param errors
+	reQuery := regexp.MustCompile(`parameter "([^"]+)" in query has an error: ([^\n|]+)`)
+
+	// regex for body errors
+	reBody := regexp.MustCompile(`Error at "/([^"]+)": ([^\n|]+)`)
+
+	// process query param errors
+	matchesQuery := reQuery.FindAllStringSubmatch(input, -1)
+	for _, match := range matchesQuery {
+		if len(match) == 3 {
+			results = append(results, openapi.Detail{
+				Field:   match[1],
+				Message: strings.TrimSpace(match[2]),
+			})
+		}
+	}
+
+	// process body errors
+	matchesBody := reBody.FindAllStringSubmatch(input, -1)
+	for _, match := range matchesBody {
+		if len(match) == 3 {
+			rawField := match[1]
+			field := strings.ReplaceAll(strings.TrimPrefix(rawField, "/"), "/", ".")
+			results = append(results, openapi.Detail{
+				Field:   field,
+				Message: strings.TrimSpace(match[2]),
+			})
+		}
+	}
+
+	return &results
 }
 
 func NewEchoErrorResponse(statusCode int, message string, details *[]openapi.Detail) *echo.HTTPError {
 	errorResponsePayload := NewErrorResponse(statusCode, message, details)
 
 	return echo.NewHTTPError(errorResponsePayload.Code, errorResponsePayload)
+}
+
+func NewEchoBadRequestResponse(details *[]openapi.Detail) *echo.HTTPError {
+	return NewEchoErrorResponse(http.StatusBadRequest, "request validation failed", details)
 }
 
 func NewErrorResponse(statusCode int, message string, details *[]openapi.Detail) *openapi.ErrorResponse {
