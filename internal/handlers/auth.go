@@ -16,7 +16,7 @@ func checkPermission(c echo.Context, permission Permission) (*User, error) {
 		return nil, echo.ErrUnauthorized
 	}
 
-	if user.Permission != permission {
+	if user.Permission == PermissionRead && user.Permission != permission {
 		return nil, echo.ErrForbidden
 	}
 

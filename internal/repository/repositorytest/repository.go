@@ -68,3 +68,18 @@ func (mr *MockRepositoryMockRecorder) CreateQuote(ctx, quote any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQuote", reflect.TypeOf((*MockRepository)(nil).CreateQuote), ctx, quote)
 }
+
+// GetQuotes mocks base method.
+func (m *MockRepository) GetQuotes(ctx context.Context, params *repository.GetQuotesParams) ([]repository.Quote, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetQuotes", ctx, params)
+	ret0, _ := ret[0].([]repository.Quote)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetQuotes indicates an expected call of GetQuotes.
+func (mr *MockRepositoryMockRecorder) GetQuotes(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuotes", reflect.TypeOf((*MockRepository)(nil).GetQuotes), ctx, params)
+}

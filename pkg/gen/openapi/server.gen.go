@@ -17,6 +17,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
@@ -69,6 +70,15 @@ type ErrorResponse struct {
 	Status string `json:"status"`
 }
 
+// GetQuotesResponse List of quotes.
+type GetQuotesResponse = []CreateQuoteResponse
+
+// GetQuotesParams defines parameters for GetQuotes.
+type GetQuotesParams struct {
+	// Author Filter by author
+	Author *string `form:"author,omitempty" json:"author,omitempty"`
+}
+
 // PostAuthorsJSONRequestBody defines body for PostAuthors for application/json ContentType.
 type PostAuthorsJSONRequestBody = CreateAuthorRequest
 
@@ -80,6 +90,9 @@ type ServerInterface interface {
 
 	// (POST /authors)
 	PostAuthors(ctx echo.Context) error
+	// Gets a list of Quotes.
+	// (GET /quotes)
+	GetQuotes(ctx echo.Context, params GetQuotesParams) error
 
 	// (POST /quotes)
 	PostQuotes(ctx echo.Context) error
@@ -96,6 +109,24 @@ func (w *ServerInterfaceWrapper) PostAuthors(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostAuthors(ctx)
+	return err
+}
+
+// GetQuotes converts echo context to params.
+func (w *ServerInterfaceWrapper) GetQuotes(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetQuotesParams
+	// ------------- Optional query parameter "author" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "author", ctx.QueryParams(), &params.Author)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter author: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetQuotes(ctx, params)
 	return err
 }
 
@@ -137,6 +168,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.POST(baseURL+"/authors", wrapper.PostAuthors)
+	router.GET(baseURL+"/quotes", wrapper.GetQuotes)
 	router.POST(baseURL+"/quotes", wrapper.PostQuotes)
 
 }
@@ -163,6 +195,23 @@ type PostAuthors400JSONResponse ErrorResponse
 func (response PostAuthors400JSONResponse) VisitPostAuthorsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetQuotesRequestObject struct {
+	Params GetQuotesParams
+}
+
+type GetQuotesResponseObject interface {
+	VisitGetQuotesResponse(w http.ResponseWriter) error
+}
+
+type GetQuotes200JSONResponse GetQuotesResponse
+
+func (response GetQuotes200JSONResponse) VisitGetQuotesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -198,6 +247,9 @@ type StrictServerInterface interface {
 
 	// (POST /authors)
 	PostAuthors(ctx context.Context, request PostAuthorsRequestObject) (PostAuthorsResponseObject, error)
+	// Gets a list of Quotes.
+	// (GET /quotes)
+	GetQuotes(ctx context.Context, request GetQuotesRequestObject) (GetQuotesResponseObject, error)
 
 	// (POST /quotes)
 	PostQuotes(ctx context.Context, request PostQuotesRequestObject) (PostQuotesResponseObject, error)
@@ -244,6 +296,31 @@ func (sh *strictHandler) PostAuthors(ctx echo.Context) error {
 	return nil
 }
 
+// GetQuotes operation middleware
+func (sh *strictHandler) GetQuotes(ctx echo.Context, params GetQuotesParams) error {
+	var request GetQuotesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetQuotes(ctx.Request().Context(), request.(GetQuotesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetQuotes")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetQuotesResponseObject); ok {
+		return validResponse.VisitGetQuotesResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // PostQuotes operation middleware
 func (sh *strictHandler) PostQuotes(ctx echo.Context) error {
 	var request PostQuotesRequestObject
@@ -276,20 +353,22 @@ func (sh *strictHandler) PostQuotes(ctx echo.Context) error {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9yW0W/bNhDG/xXiNqAvsq3MTpPpzW2CLUBWpF3Wl2EozuLJYiuRyvGUxSv8vw+knNiK",
-	"lXkFWmTYk2XpxPt933eS+BlyVzfOkhUP2WfweUk1xsPXTCg0b6V0/I5uWvISTjfsGmIxFIss1hR+6Q7r",
-	"piLI4HWJXJFXZyb/RNZDArWxl2SXUkJ2lICsmlDmhY1dwnqdANNNa5g0ZL936/3xUOUWHykXWCePaHzj",
-	"rKd9HKP7MLPp8Qnm03R0nC+mo9mpno5Oix9PRrPjl0enJ2k606cLSKBwXKNABm1rdCDGu3vi6cuegPD3",
-	"kYLkq5sQGQ448bZ1Qk/GgtGnD89jh9Cd9PuWyFr96fiTanDllSuKL3QkLpnsyDpozFMT8qzO/G/yiBj/",
-	"KpQzEjTVfg6FoSq6ocnnbBoxzkIG1yUp31BuCpOrWKOYKhTSSpySkhQxOx5DsiOH6tBiQHlN3uOS9tv8",
-	"3NZoR0yocVGRorumQovhonJFbNP1Hmh2HpqpuvWiFqRQ3WJltEKtmbwfwyHnOt1btCHPzkPXp0c4d3pI",
-	"0vX1lfKC0noVKnrUszTdGSNjZctprNCSOPTVMSu/v/al8RKM6Qpo44vqiL0qHKslo20rZGW8bykaYYTq",
-	"uNj3TAVk8N1k+62ZbD40k818rB94kBlXXxKeb+saeXUf3EBk70NEXbpF5B8PDUvn3X67X7eeRqU5Ci0d",
-	"m7/iiomi8XKcqBcXb97PLy/OPszf/fTbL+dvrl/0GR5fPjgoMeWtCw98+wMT7jS2cAFdjMR28S2o5lcX",
-	"yhPfEkMCt8S+U3Q0TsdpkOwastgYyGAaTyXQoJTRg0n3WMfjxnXfmDCEUfSFhgyunJf5pqhDJy+vnF51",
-	"M2qFbLwLm6Yyebxv8tEHgPttxqHZGNqBRLX9gLoyhVZ1zLBrpHBL0dnuaYp6fkjTb8S4eWQHIIOHGz7F",
-	"D3UJzL4iS/+9MQDxCrXaMXKdwOQmDMqBlN92Nd8y5N525h8yVpH3GRLubyueCjjS/XfyXa//DgAA///M",
-	"ApSe4AsAAA==",
+	"H4sIAAAAAAAC/9xW3W7bRhN9lcV+H5AbSqIjOVZ5p8RuasANnNTNTWAEI3IobkLu0rND12qgdy92V38U",
+	"6dgBYrjolShyOHPmnDPD/SZTU9VGo2Yrk2/SpgVW4C/fEALjrOHC0Ae8adCyu12TqZFYoQ/SUKH7xTuo",
+	"6hJlIt8UQCVacarSr6itjGSl9AXqBRcyOYokL2sXZpmUXsjVKpKEN40izGTyKeS73kaZ+RdMWa6iAzS2",
+	"NtpiF47K2mAm4+MTSMfx4DidjweTaTYeTPNfTgaT41dH05M4nmTTuYxkbqgClolsGpU5xHC3QTx+1WrA",
+	"/T3oIPrpJHgMDzDxvjGM98oCnqfPz0MH4x236xZAmfjL0FdRw9IKk+c/yIhPGe219SAx9znkWZn5z+jh",
+	"YTxKlFNkUGVXh1xh6dnI0KakalZGy0ReFShsjanKVSp8jCAsgTETbAQXKJDI0FBGe+1g5Ur0dF6htbDA",
+	"bpnfmgr0gBAymJco8K4uQYN7KEzuy4TaPcXOXDFRNZbFHAWIWyhVJiDLCK0dyoeYC33voPVxduaq3m/h",
+	"1GR9LV1dXQrLwI0VLqKFehLHezZSmnc4lWZcILm6mdfKdnNfKMuOmBCAa15EQGxFbkgsCHRTAgllbYOe",
+	"CMVY+WT/J8xlIv832n1rRusPzWjtj9UWDxDB8kfEs01VAS03wvVI9tFJFNTNPf5hn1kCd91yf+w49Z2m",
+	"wLgwpP72GSOBw8UwEi/O332cXZyffp59ePvn72fvrl60MRw+ftAoXuUdC1t8fYZ5i+zXnt03Tb+ENz7u",
+	"0fL07dSOVg660rlxyVix79e/ImaX58Ii3SLJSN4i2QDmaBgPY5fH1KihVjKRY38rkjVw4VGNwl7x17UJ",
+	"Hzk3BZ7180wm8tJYnq2DAndo+bXJlmFINKP2b0Fdlyr1742+WAdgc855XPftI5Dvts1tCBOgRcAs95Vk",
+	"atBLG9jz/byM4yfCuJGoC9JxuMYnaE/KyU/E0l5cPSBeQyb2iFxFchQM6TIvsEfkrbW9NwgqZHSm+HRo",
+	"8F9VyUhivtyJ4Na635VOA2dRmcibBmm5OV4lchu7a/CRp7iX3QG+fkKZuyPeQ+8CeT3gexK71RZWZKDT",
+	"ChDlehu8X2+DVfSdGdvy/3Qj1jrNfmfCQnfPMF8HG/Ce8fLo/j3T5ZT3yzfMS0OlO/sx18loVJoUysJY",
+	"TqbxNJar69U/AQAA//8sYlKxCw4AAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

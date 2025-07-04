@@ -20,3 +20,7 @@ func (r *Repository) CreateQuote(ctx context.Context, quote *repository.Quote) e
 
 	return nil
 }
+
+func (r *Repository) GetQuotes(ctx context.Context, params *repository.GetQuotesParams) ([]repository.Quote, error) {
+	return nil, nil
+}

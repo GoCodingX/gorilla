@@ -49,6 +49,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    get:
+      summary: Gets a list of Quotes.
+      operationId: getQuotes
+      parameters:
+        - name: author
+          in: query
+          description: Filter by author
+          required: false
+          explode: true
+          schema:
+            type: string
+            minLength: 2
+            example: Charles Dickens
+      responses:
+        '200':
+          description: get quotes response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetQuotesResponse'
 components:
   schemas:
     CreateAuthorRequest:
@@ -115,6 +135,11 @@ components:
         - id
         - text
         - author_id
+    GetQuotesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CreateQuoteResponse'
+      description: List of quotes.
     Detail:
       type: object
       properties:

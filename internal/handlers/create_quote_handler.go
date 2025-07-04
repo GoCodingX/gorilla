@@ -25,27 +25,25 @@ func (s *QuotesService) PostQuotes(c echo.Context) error {
 		return err
 	}
 
-	// persist via repo layer
+	// prepare data for persistence
 	repoQuote := toRepoQuote(createQuotePayload, user.Username)
 
+	// persist via repo layer
 	err = s.repo.CreateQuote(c.Request().Context(), repoQuote)
 	if err != nil {
 		var errInvalidReferenceError *repository.InvalidReferenceError
 		if errors.As(err, &errInvalidReferenceError) {
-			return pkgerrors.NewEchoErrorResponse(http.StatusBadRequest, "request validation failed",
-				&[]openapi.Detail{
-					{
-						Field:   "author_id",
-						Message: "no author with such id exists",
-					},
-				})
+			return pkgerrors.NewEchoBadRequestResponse(&[]openapi.Detail{{
+				Field:   "author_id",
+				Message: "no author with such id exists",
+			}})
 		}
 
 		return err
 	}
 
-	// prepare http response
-	response := openapi.PostQuotes200JSONResponse{
+	// prepare http response payload
+	response := openapi.CreateQuoteResponse{
 		Id:       repoQuote.ID,
 		Text:     repoQuote.Text,
 		AuthorId: repoQuote.AuthorID,

@@ -22,9 +22,10 @@ func (s *QuotesService) PostAuthors(c echo.Context) error {
 		return err
 	}
 
-	// persist via repo layer
+	// prepare data for persistence
 	repoAuthor := toRepoAuthor(createAuthorPayload)
 
+	// persist via repo layer
 	err := s.repo.CreateAuthor(c.Request().Context(), repoAuthor)
 	if err != nil {
 		var errAlreadyExists *repository.AlreadyExistsError
@@ -35,8 +36,8 @@ func (s *QuotesService) PostAuthors(c echo.Context) error {
 		return err
 	}
 
-	// prepare http response
-	response := openapi.PostAuthors200JSONResponse{
+	// prepare http response payload
+	response := openapi.CreateAuthorResponse{
 		Id:   repoAuthor.ID,
 		Name: repoAuthor.Name,
 	}
