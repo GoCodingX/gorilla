@@ -60,7 +60,7 @@ paths:
           explode: true
           schema:
             type: string
-            minLength: 2
+            minLength: 1
             example: Charles Dickens
       responses:
         '200':
