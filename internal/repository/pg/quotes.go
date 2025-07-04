@@ -22,5 +22,21 @@ func (r *Repository) CreateQuote(ctx context.Context, quote *repository.Quote) e
 }
 
 func (r *Repository) GetQuotes(ctx context.Context, params *repository.GetQuotesParams) ([]repository.Quote, error) {
-	return nil, nil
+	var quotes []repository.Quote
+
+	query := r.db.NewSelect().
+		Model(&quotes).
+		Relation("Author").
+		Order("q.created_at DESC").
+		Limit(10)
+
+	if params.Author != nil && len(*params.Author) > 0 {
+		query = query.Where("author.name = ?", params.Author)
+	}
+
+	if err := query.Scan(ctx); err != nil {
+		return nil, err
+	}
+
+	return quotes, nil
 }
