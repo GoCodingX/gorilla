@@ -26,7 +26,6 @@ generate:
 dev:
 	@go run cmd/quotes-api/main.go
 
-
 .PHONY: run-dependencies
 run-dependencies:
 	docker compose up -d
