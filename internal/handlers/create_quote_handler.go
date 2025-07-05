@@ -12,7 +12,7 @@ import (
 
 func (s *QuotesService) PostQuotes(c echo.Context) error {
 	// authorization
-	user, err := checkPermission(c, PermissionWrite)
+	user, err := Authorize(c, PermissionWrite)
 	if err != nil {
 		return err
 	}

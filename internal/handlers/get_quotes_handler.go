@@ -11,7 +11,7 @@ import (
 
 func (s *QuotesService) GetQuotes(c echo.Context, params openapi.GetQuotesParams) error {
 	// authorization
-	_, err := checkPermission(c, PermissionRead)
+	_, err := Authorize(c, PermissionRead)
 	if err != nil {
 		return err
 	}

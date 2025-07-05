@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func checkPermission(c echo.Context, permission Permission) (*User, error) {
+func Authorize(c echo.Context, requiredPermission Permission) (*User, error) {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		logger.Error("failed to get user from context", slog.String("err", err.Error()))
@@ -16,11 +16,11 @@ func checkPermission(c echo.Context, permission Permission) (*User, error) {
 		return nil, echo.ErrUnauthorized
 	}
 
-	if user.Permission == PermissionRead && user.Permission != permission {
-		return nil, echo.ErrForbidden
+	if user.Permission == PermissionWrite || (user.Permission == PermissionRead && requiredPermission == PermissionRead) {
+		return user, nil
 	}
 
-	return user, nil
+	return nil, echo.ErrForbidden
 }
 
 func getUserFromContext(c echo.Context) (*User, error) {
