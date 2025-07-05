@@ -44,7 +44,8 @@ func (s *QuotesService) GetQuotes(c echo.Context, params openapi.GetQuotesParams
 		}
 	}
 
-	response := openapi.GetQuotesResponse{
+	// prepare http response payload
+	response := &openapi.GetQuotesResponse{
 		Quotes:     quotes,
 		NextCursor: nextCursor,
 	}

@@ -12,7 +12,7 @@ import (
 func TestAuthorize(t *testing.T) {
 	t.Run("returns echo.ErrUnauthorized when user is not set in context", func(t *testing.T) {
 		// create an echo ctx
-		c := createTestEchoContext()
+		c, _ := newEchoContext(nil)
 
 		// act
 		_, err := handlers.Authorize(c, handlers.PermissionRead)
@@ -28,7 +28,7 @@ func TestAuthorize(t *testing.T) {
 
 	t.Run("returns echo.ErrUnauthorized when user is not set as the right type in context", func(t *testing.T) {
 		// create an echo ctx
-		c := createTestEchoContext()
+		c, _ := newEchoContext(nil)
 
 		// set user to a different type
 		c.Set("user", "user_value")
@@ -47,7 +47,7 @@ func TestAuthorize(t *testing.T) {
 
 	t.Run("returns echo.ErrForbidden when user has 'read' permission and 'write' is required", func(t *testing.T) {
 		// create an echo ctx
-		c := createTestEchoContext()
+		c, _ := newEchoContext(nil)
 
 		// set user
 		c.Set("user", &handlers.User{
@@ -68,7 +68,7 @@ func TestAuthorize(t *testing.T) {
 
 	t.Run("returns no error when user has the right permission", func(t *testing.T) {
 		// create an echo ctx
-		c := createTestEchoContext()
+		c, _ := newEchoContext(nil)
 
 		// set user
 		username := "some_username"

@@ -37,7 +37,7 @@ func (s *QuotesService) PostAuthors(c echo.Context) error {
 	}
 
 	// prepare http response payload
-	response := openapi.CreateAuthorResponse{
+	response := &openapi.CreateAuthorResponse{
 		Id:   repoAuthor.ID,
 		Name: repoAuthor.Name,
 	}

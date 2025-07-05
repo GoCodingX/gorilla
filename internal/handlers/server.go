@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/GoCodingX/gorilla/internal/repository"
-	"github.com/GoCodingX/gorilla/internal/repository/pg"
 )
 
 type QuotesService struct {
@@ -10,7 +9,7 @@ type QuotesService struct {
 }
 
 type NewQuotesServiceParams struct {
-	Repo *pg.Repository
+	Repo repository.Repository
 }
 
 func NewQuotesService(params *NewQuotesServiceParams) *QuotesService {
