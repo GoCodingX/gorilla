@@ -23,12 +23,19 @@ generate:
 	go generate ./...
 
 .PHONY: dev
-dev: run-dependencies
+dev:
 	@go run cmd/quotes-api/main.go
+
 
 .PHONY: run-dependencies
 run-dependencies:
 	docker compose up -d
+
+.PHONY: dev-docker
+dev-docker:
+	DATABASE_URL=postgres://user:password@db:5432/quotes?sslmode=disable \
+	MIGRATIONS_DIR=./internal/repository/pg/migrations \
+	docker compose -f docker-compose.yml up --build
 
 .PHONY: test
 test:

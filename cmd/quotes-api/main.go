@@ -2,7 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 
 	"github.com/GoCodingX/gorilla/internal/config"
@@ -25,9 +27,12 @@ func main() {
 	// load env vars from .env files
 	err := godotenv.Load()
 	if err != nil {
-		logger.Fatal("failed to read env file", err)
+		var pathErr *fs.PathError
+		if !errors.As(err, &pathErr) {
+			logger.Fatal("failed to read env file", err)
 
-		return
+			return
+		}
 	}
 
 	// load config
