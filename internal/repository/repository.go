@@ -8,6 +8,6 @@ import (
 
 type Repository interface {
 	CreateQuote(ctx context.Context, quote *Quote) error
-	GetQuotes(ctx context.Context, params *GetQuotesParams) ([]Quote, error)
+	GetQuotes(ctx context.Context, params *GetQuotesParams) ([]Quote, *QuotesCursor, error)
 	CreateAuthor(ctx context.Context, author *Author) error
 }

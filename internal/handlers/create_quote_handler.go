@@ -43,7 +43,7 @@ func (s *QuotesService) PostQuotes(c echo.Context) error {
 	}
 
 	// prepare http response payload
-	response := openapi.CreateQuoteResponse{
+	response := openapi.QuoteResponse{
 		Id:       repoQuote.ID,
 		Text:     repoQuote.Text,
 		AuthorId: repoQuote.AuthorID,

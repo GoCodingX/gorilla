@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
@@ -36,13 +37,6 @@ type CreateAuthorResponse struct {
 // CreateQuoteRequest defines model for CreateQuoteRequest.
 type CreateQuoteRequest struct {
 	AuthorId openapi_types.UUID `json:"author_id"`
-	Text     string             `json:"text"`
-}
-
-// CreateQuoteResponse defines model for CreateQuoteResponse.
-type CreateQuoteResponse struct {
-	AuthorId openapi_types.UUID `json:"author_id"`
-	Id       openapi_types.UUID `json:"id"`
 	Text     string             `json:"text"`
 }
 
@@ -71,12 +65,32 @@ type ErrorResponse struct {
 }
 
 // GetQuotesResponse List of quotes.
-type GetQuotesResponse = []CreateQuoteResponse
+type GetQuotesResponse struct {
+	NextCursor *NextCursor `json:"next_cursor,omitempty"`
+
+	// Quotes Array of quotes.
+	Quotes []QuoteResponse `json:"quotes"`
+}
+
+// NextCursor defines model for NextCursor.
+type NextCursor struct {
+	CreatedAt string `json:"created_at"`
+	Id        string `json:"id"`
+}
+
+// QuoteResponse defines model for QuoteResponse.
+type QuoteResponse struct {
+	AuthorId openapi_types.UUID `json:"author_id"`
+	Id       openapi_types.UUID `json:"id"`
+	Text     string             `json:"text"`
+}
 
 // GetQuotesParams defines parameters for GetQuotes.
 type GetQuotesParams struct {
 	// Author Filter by author
-	Author *string `form:"author,omitempty" json:"author,omitempty"`
+	Author          *string             `form:"author,omitempty" json:"author,omitempty"`
+	CursorId        *openapi_types.UUID `form:"cursor_id,omitempty" json:"cursor_id,omitempty"`
+	CursorCreatedAt *time.Time          `form:"cursor_created_at,omitempty" json:"cursor_created_at,omitempty"`
 }
 
 // PostAuthorsJSONRequestBody defines body for PostAuthors for application/json ContentType.
@@ -123,6 +137,20 @@ func (w *ServerInterfaceWrapper) GetQuotes(ctx echo.Context) error {
 	err = runtime.BindQueryParameter("form", true, false, "author", ctx.QueryParams(), &params.Author)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter author: %s", err))
+	}
+
+	// ------------- Optional query parameter "cursor_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "cursor_id", ctx.QueryParams(), &params.CursorId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter cursor_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "cursor_created_at" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "cursor_created_at", ctx.QueryParams(), &params.CursorCreatedAt)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter cursor_created_at: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
@@ -224,7 +252,7 @@ type PostQuotesResponseObject interface {
 	VisitPostQuotesResponse(w http.ResponseWriter) error
 }
 
-type PostQuotes200JSONResponse CreateQuoteResponse
+type PostQuotes200JSONResponse QuoteResponse
 
 func (response PostQuotes200JSONResponse) VisitPostQuotesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -353,22 +381,23 @@ func (sh *strictHandler) PostQuotes(ctx echo.Context) error {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9xW3W7bRhN9lcV+H5AbSqIrOVZ5p8RuasANnNTNTWAEI3JIbkLu0rND12qgdy92V3+U",
-	"6NgpYrjolShyOHPmnDPD/SpTUzdGo2Yrk6/SpiXW4C9fEwLjrOXS0Hu8adGyu92QaZBYoQ/SUKP7xTuo",
-	"mwplIl+XQBVacarSL6itjGSt9AXqgkuZHEWSF40Ls0xKF3K5jCThTasIM5l8DPmuN1Fm/hlTlstoD41t",
-	"jLZ4CEdlXTCT8fEJpON4cJzOx4PJNBsPpvnPJ4PJ8cuj6UkcT7LpXEYyN1QDy0S2rcocYrhbIx6/7DTg",
-	"/u51EP1wEjyGB5h41xrGe2UBz9On56GD8Y67dUugTPxp6ItoYGGFyfPvZMSnjHbaepCY+xzyrMz8Z/Tw",
-	"MB4lyikyqOpQh1xh5dnI0KakGlZGy0RelShsg6nKVSp8jCCsgDETbASXKJDI0FBGO+1g7Ur0dF6jtVDg",
-	"YZlf2xr0gBAymFco8K6pQIN7KEzuy4TaPcXOXDFRt5bFHAWIW6hUJiDLCK0dyoeYC31vofVxduaq3m/h",
-	"1GR9LV1dXQrLwK0VLqKDehLHOzZSmrc4lWYskFzdzGtlD3NfKMuOmBCAK15EQGxFbkgUBLqtgISytkVP",
-	"hGKsfbL/E+Yykf8bbb81o9WHZrTyx3KDB4hg8T3i2baugRZr4Xok++AkCurmHv+wzyyBu8Nyv2859Z2m",
-	"wFgYUn/5jJHAYTGMxIvztx9mF+enn2bv3/zx29nbqxddDPuPHzSKV3nLwgZfn2HeIPu1Z3dN0y/hjY97",
-	"tDx9O/VAKwdd6dy4ZKzY9+tfEbPLc2GRbpFkJG+RbABzNIyHsctjGtTQKJnIsb8VyQa49KhGYa/468aE",
-	"j5ybAs/6eSYTeWksz1ZBgTu0/MpkizAkmlH7t6BpKpX690afrQOwPuc8rvvuEch32+U2hAnQImCWu0oy",
-	"teilDez5fn6K4yfCuJboEKTjcIVP0I6Ukx+Ipbu4ekC8gkzsELmM5CgY0mUusEfkjbW9NwhqZHSm+Lhv",
-	"8F9UxUhivtiK4Na635VOA2dRmcibFmmxPl4lchO7bfCfn+Kun1DmwxHvobdAXg34jsRutYUVGei0AkS1",
-	"2gbvVttgGX1jxjb8P92IdU6z35iw0N0zzNfeBrxnvDy6f890OeX98g3z0lLlzn7MTTIaVSaFqjSWk2k8",
-	"jeXyevl3AAAA//90MIdVCw4AAA==",
+	"H4sIAAAAAAAC/9xXYW/bNhD9KwQ3oF9kW5mdxtM3N8m6AFmQdlm/FIFxlk42W4lUyFNmL/B/H0jKtmQp",
+	"dYI2W9FPcSyK9+69x3f0A49VXiiJkgyPHriJF5iD+3iqEQgnJS2Ufo93JRqyXxdaFahJoFskIUf7F5eQ",
+	"FxnyiJ8uQGdo2JmIP6M0POC5kJco57Tg0VHAaVXYZYa0kHO+Xgdc410pNCY8+uj3u92uUrNPGBNfB3to",
+	"TKGkwTYckTTBjIbHJxAPw95xPBv2RuNk2Bunv570Rsevj8YnYThKxjMe8FTpHIhHvCxFYhHDcoN4+LrR",
+	"gP13r4Pgm5PgMBxg4l2pCB+VBRxP0/+HDsIlNesuQCfsb6U/swJWhqk0fSYjbsug1lYXMWdIILI2GanA",
+	"zBGRoIm1KEgoySN+s0BmCoxFKmLm1jCNGRAmjBSjBTLUWuk+D2qdYG5LdDSdozEwx3aZ38scZE8jJDDL",
+	"kOGyyECCfchU6sr42h3Fzm0xlpeG2AwZsHvIRMIgSTQa0+eHSPN976B1cXZuqz5+nmKVdLV0c3PNDAGV",
+	"htkVDdSjMKw5SEja4RSScI7a1k2cVqa996UwZInxC7DihXnEhqVKs7kGWWagmTCmREeEIMzdZj9rTHnE",
+	"fxrsYm1QZdqg8sd6iwe0htVzxDNlnoNebYTrkOyDlcirmzr8/S6zeO7a5f7cceo6jYFwrrT4x+0YMOzP",
+	"+wF7dXH1YXJ5cTadvH/71x/nVzevmhj2Hx80ilN5x8IWX5dh3iK56DF103RLeOfWWWx7MwOXNI1LbZQ+",
+	"JNkVLunUr1wH3G/YLjixOjYrPskQVYZWfbR8scdSVb2LlBrM9hFycZ1MwWViywo+op8wD2r7dEFo9vJ9",
+	"DYQfZgw5GE+YRfY9IVPlpBXkijuB2OT6ghnU96h5wO9RG+/go37YDy1oVaCEQvCID91XAS+AFk7Cga/o",
+	"PhfKT30rscuGi4RH/FoZmlSLPHA09EYlKx/lklC6t6AoMhG79wafjAWwufgdOjFdd0LXbfNA+mUMJPOY",
+	"eZ1G0iU6Xr1XXT+/hOELYdwc7jZIy2GFj+laCIy+IZbmeO0A8QYSViNyHfDBLuXm2CHyNoCdNzTkSGhN",
+	"8XE/FX8TGaFms9VOBHv5cBPdamAtyiN+V6Jebe6bEd+u3TX4Fdfah6eU9KNg6g7XrupXnf7nVa5FayeC",
+	"BAh7JHLsmKS3L+jk9qztcNAcqZp7NRfbO4a/q3jHGAYsq8byu2pIroMvxMjWYi+XIo1fMF8IEd/dfxoh",
+	"exeDR7LD4fp+osNq7iaLD4NSZ3bkERXRYJCpGLKFMhSNw3HI17frfwMAAP//4s1BuvkPAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

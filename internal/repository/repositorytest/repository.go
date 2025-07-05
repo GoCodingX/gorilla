@@ -70,12 +70,13 @@ func (mr *MockRepositoryMockRecorder) CreateQuote(ctx, quote any) *gomock.Call {
 }
 
 // GetQuotes mocks base method.
-func (m *MockRepository) GetQuotes(ctx context.Context, params *repository.GetQuotesParams) ([]repository.Quote, error) {
+func (m *MockRepository) GetQuotes(ctx context.Context, params *repository.GetQuotesParams) ([]repository.Quote, *repository.QuotesCursor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQuotes", ctx, params)
 	ret0, _ := ret[0].([]repository.Quote)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(*repository.QuotesCursor)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetQuotes indicates an expected call of GetQuotes.
